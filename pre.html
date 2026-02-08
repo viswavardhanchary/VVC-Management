@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Ghost Drag Example</title>
+  <style>
+    body {
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f2f2f2;
+    }
+
+    #container {
+      width: 400px;
+      height: 200px;
+      border: 2px dashed #aaa;
+      position: relative;
+    }
+
+    .box {
+      width: 100px;
+      height: 100px;
+      background: #4f46e5;
+      border-radius: 12px;
+      position: absolute;
+      left: 20px;
+      top: 50px;
+      cursor: grab;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: sans-serif;
+      user-select: none;
+    }
+
+    .ghost {
+      opacity: 0.5;
+      pointer-events: none;
+      position: absolute;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="container">
+    <div id="realBox" class="box">Drag me</div>
+  </div>
+
+  <script>
+    const realBox = document.getElementById("realBox");
+    const container = document.getElementById("container");
+
+    let ghost = null;
+    let offsetX = 0;
+    let offsetY = 0;
+    let isDragging = false;
+
+    realBox.addEventListener("mousedown", (e) => {
+      isDragging = true;
+
+      // Create ghost (clone)
+      ghost = realBox.cloneNode(true);
+      ghost.classList.add("ghost");
+      document.body.appendChild(ghost);
+
+      const rect = realBox.getBoundingClientRect();
+
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+
+      ghost.style.left = rect.left + "px";
+      ghost.style.top = rect.top + "px";
+    });
+
+    document.addEventListener("mousemove", (e) => {
+      if (!isDragging) return;
+
+      ghost.style.left = (e.clientX - offsetX) + "px";
+      ghost.style.top = (e.clientY - offsetY) + "px";
+    });
+
+    document.addEventListener("mouseup", (e) => {
+      if (!isDragging) return;
+      isDragging = false;
+
+      // Move real box to where ghost is (relative to container)
+      const containerRect = container.getBoundingClientRect();
+      const ghostRect = ghost.getBoundingClientRect();
+
+      realBox.style.left = (ghostRect.left - containerRect.left) + "px";
+      realBox.style.top = (ghostRect.top - containerRect.top) + "px";
+
+      // Remove ghost
+      ghost.remove();
+      ghost = null;
+    });
+  </script>
+
+</body>
+</html>
