@@ -4,19 +4,26 @@ const router = express.Router();
 const controllers = require('../controllers/project.controllers');
 const { authMiddleware } = require('../middlewares/user.auth');
 
-// Create project
+// CRUD
 router.post('/add', authMiddleware, controllers.createProject);
-
-// Get all projects (optional ?mine=true)
 router.get('/', authMiddleware, controllers.getProjects);
-
-// Get single project
 router.get('/:id', authMiddleware, controllers.getProject);
-
-// Update project
 router.put('/:id', authMiddleware, controllers.updateProject);
-
-// Delete project
 router.delete('/:id', authMiddleware, controllers.deleteProject);
+
+// Users inside project
+router.post('/:id/users/add', authMiddleware, controllers.addUserToProject);
+router.delete('/:id/users/:userId', authMiddleware, controllers.removeUserFromProject);
+
+// Task updates
+router.put('/:id/users/:userId/task', authMiddleware, controllers.updateUserTask);
+router.put('/:id/users/:userId/drive', authMiddleware, controllers.updateDriveLink);
+router.put('/:id/users/:userId/status', authMiddleware, controllers.updateUserStatus);
+
+// Comments
+router.post('/:id/users/:userId/comments', authMiddleware, controllers.addComment);
+
+// Get my projects
+router.get('/mine/list', authMiddleware, controllers.getMyProjects);
 
 module.exports = router;

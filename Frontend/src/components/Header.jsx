@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { verify } from "../services/userService";
 import { LogIn, UserPlus, LogOut, User, Plus, Menu, X } from "lucide-react";
@@ -10,24 +10,22 @@ export const Header = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check token on load and verify with backend
     const token = localStorage.getItem('token');
     if (!token) return;
 
     verify(token)
       .then((res) => {
         if (res && res.success && res.data) {
-          // backend returns { id, name }
+
           const { id, name } = res.data;
           setIsLoggedIn(true);
           setUser({ id, name });
-          // ensure localStorage has consistent values
           try {
             localStorage.setItem('userId', id);
             localStorage.setItem('userName', name);
           } catch (e) {}
         } else {
-          // invalid token
+
           localStorage.removeItem('token');
           localStorage.removeItem('userId');
           localStorage.removeItem('userName');
@@ -71,7 +69,7 @@ export const Header = () => {
           </span>
         </Link>
 
-        {/* Desktop Navigation */}
+
         <nav className="hidden md:flex items-center gap-6">
           {isLoggedIn ? (
             <>
@@ -119,8 +117,6 @@ export const Header = () => {
             </>
           )}
         </nav>
-
-        {/* Mobile Menu Button */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           className="md:hidden text-cyan-700 hover:text-cyan-900"
@@ -129,7 +125,7 @@ export const Header = () => {
         </button>
       </div>
 
-      {/* Mobile Navigation */}
+  
       {mobileMenuOpen && (
         <nav className="md:hidden border-t border-cyan-300 bg-cyan-50">
           <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col gap-3">

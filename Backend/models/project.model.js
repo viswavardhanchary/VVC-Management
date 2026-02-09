@@ -15,9 +15,48 @@ const UpdateSchema = new Schema(
 
 const CommentsSchema = new Schema(
   {
-    by_creator: [{ type: String }],
-    by_others: [{ type: String }],
-    by_user: [{ type: String }],
+    by_creator: {
+      type: [
+      {
+        name: String,
+        last_edited: {
+          type: Date,
+          default: Date.now()
+        },
+        text: String
+      }
+    
+    ],
+    default: []
+  },
+    by_others: {
+      type: [
+      {
+        name: String,
+        last_edited: {
+          type: Date,
+          default: Date.now()
+        },
+        text: String
+      }
+    
+    ],
+    default: []
+  },
+    by_user: {
+      type: [
+      {
+        name: String,
+        last_edited: {
+          type: Date,
+          default: Date.now()
+        },
+        text: String
+      }
+    
+    ],
+    default: []
+  },
   },
   { _id: false }
 );

@@ -1,98 +1,257 @@
 const Project = require('../models/project.model');
 
-/** Create a new project */
+/** Create project */
 async function createProject(req, res) {
   try {
     const { name, password, link, users_added } = req.body;
-    const created_by = req.userId || req.body.created_by;
+    const created_by = req.userId;
+
     if (!name) return res.status(400).json({ message: 'Project name is required' });
 
-    const project = await Project.create({ name, password, link, created_by, users_added });
-    return res.status(201).json({ success: true, project });
+    const project = await Project.create({
+      name,
+      password,
+      link,
+      created_by,
+      users_added: users_added || [],
+    });
+
+    res.status(201).json({ success: true, project });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error' });
   }
 }
 
-/** Get single project by id */
-async function getProject(req, res) {
-  try {
-    const { id } = req.params;
-    const project = await Project.findById(id).populate('created_by users_added.user_id', 'name email');
-    if (!project) return res.status(404).json({ message: 'Project not found' });
-    return res.json({ success: true, project });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: 'Server error' });
-  }
-}
-
-/** Get all projects (optionally filter by user membership or creator) */
+/** Get all projects */
 async function getProjects(req, res) {
   try {
-    const userId = req.userId;
-    const { mine } = req.query; // ?mine=true to get projects created by or assigned to user
+    const projects = await Project.find()
+      .populate('created_by users_added.user_id', 'name email');
 
-    let query = {};
-    if (mine === 'true' && userId) {
-      query = {
-        $or: [
-          { created_by: userId },
-          { 'users_added.user_id': userId }
-        ]
-      };
-    }
-
-    const projects = await Project.find(query).populate('created_by users_added.user_id', 'name email');
-    return res.json({ success: true, projects });
+    res.json({ success: true, projects });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error' });
   }
 }
 
-/** Update a project */
-async function updateProject(req, res) {
+/** Get only my projects */
+async function getMyProjects(req, res) {
   try {
-    const { id } = req.params;
-    const updates = { ...req.body };
-    delete updates._id;
+    const userId = req.userId;
 
-    // If users_added updates include status changes, record them in updates array inside users_added
-    const project = await Project.findById(id);
+    const projects = await Project.find({
+      $or: [
+        { created_by: userId },
+        { 'users_added.user_id': userId },
+      ],
+    }).populate('created_by users_added.user_id', 'name email');
+
+    res.json({ success: true, projects });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
+/** Get single project */
+async function getProject(req, res) {
+  try {
+    const project = await Project.findById(req.params.id)
+      .populate('created_by users_added.user_id', 'name email');
+
     if (!project) return res.status(404).json({ message: 'Project not found' });
 
-    // handle updates for users_added if provided as full replace or partial
-    if (updates.users_added && Array.isArray(updates.users_added)) {
-      // simple replace - overwrite users_added
-      project.users_added = updates.users_added;
-      delete updates.users_added;
-    }
+    res.json({ success: true, project });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
 
-    // apply other updates
-    Object.assign(project, updates);
+/** Update project */
+async function updateProject(req, res) {
+  try {
+    const project = await Project.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },
+      { new: true }
+    );
+
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    res.json({ success: true, project });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
+/** Delete project */
+async function deleteProject(req, res) {
+  try {
+    const deleted = await Project.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ message: 'Project not found' });
+
+    res.json({ success: true, message: 'Project deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
+/** Add user to project */
+async function addUserToProject(req, res) {
+  try {
+    const { user_id, email, tasks } = req.body;
+
+    const project = await Project.findByIdAndUpdate(
+      req.params.id,
+      {
+        $push: {
+          users_added: {
+            user_id,
+            email,
+            tasks,
+            status: 'assigned',
+            updates: [],
+            comments: {},
+          },
+        },
+      },
+      { new: true }
+    );
+
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    res.json({ success: true, project });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
+/** Remove user from project */
+async function removeUserFromProject(req, res) {
+  try {
+    const project = await Project.findByIdAndUpdate(
+      req.params.id,
+      {
+        $pull: { users_added: { user_id: req.params.userId } },
+      },
+      { new: true }
+    );
+
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    res.json({ success: true, project });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
+/** Update user task */
+async function updateUserTask(req, res) {
+  try {
+    const { tasks } = req.body;
+
+    const project = await Project.findOneAndUpdate(
+      { _id: req.params.id, 'users_added.user_id': req.params.userId },
+      { $set: { 'users_added.$.tasks': tasks } },
+      { new: true }
+    );
+
+    res.json({ success: true, project });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
+/** Update drive link */
+async function updateDriveLink(req, res) {
+  try {
+    const { drive_link } = req.body;
+
+    const project = await Project.findOneAndUpdate(
+      { _id: req.params.id, 'users_added.user_id': req.params.userId },
+      { $set: { 'users_added.$.drive_link': drive_link } },
+      { new: true }
+    );
+
+    res.json({ success: true, project });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
+/** Update status + push update history */
+async function updateUserStatus(req, res) {
+  try {
+    const { status } = req.body;
+
+    const project = await Project.findOne({ _id: req.params.id });
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    const user = project.users_added.find(
+      u => u.user_id.toString() === req.params.userId
+    );
+    if (!user) return res.status(404).json({ message: 'User not found in project' });
+
+    const oldStatus = user.status;
+    user.status = status;
+
+    user.updates.push({
+      from: oldStatus,
+      to: status,
+      date: new Date(),
+    });
 
     await project.save();
 
-    return res.json({ success: true, project });
+    res.json({ success: true, project });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error' });
   }
 }
 
-/** Delete a project */
-async function deleteProject(req, res) {
+/** Add comment */
+async function addComment(req, res) {
   try {
-    const { id } = req.params;
-    const deleted = await Project.findByIdAndDelete(id);
-    if (!deleted) return res.status(404).json({ message: 'Project not found' });
-    return res.json({ success: true, message: 'Project deleted' });
+    const { text, type } = req.body; // type: by_creator | by_others | by_user
+
+    const project = await Project.findOneAndUpdate(
+      { _id: req.params.id, 'users_added.user_id': req.params.userId },
+      {
+        $push: {
+          [`users_added.$.comments.${type}`]: text,
+        },
+      },
+      { new: true }
+    );
+
+    res.json({ success: true, project });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error' });
   }
 }
 
-module.exports = { createProject, getProject, getProjects, updateProject, deleteProject };
+module.exports = {
+  createProject,
+  getProjects,
+  getMyProjects,
+  getProject,
+  updateProject,
+  deleteProject,
+  addUserToProject,
+  removeUserFromProject,
+  updateUserTask,
+  updateDriveLink,
+  updateUserStatus,
+  addComment,
+};
