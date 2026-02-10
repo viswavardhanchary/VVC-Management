@@ -1,223 +1,31 @@
-// import { useEffect, useRef, useState } from "react";
-// import { useParams } from "react-router-dom";
-// import { getProject, updateProject } from "../services/projectService";
-// import Toast from "../components/Toast";
-// import { CommentsModal } from "../components/CommentsModal";
-// import { LogsModal } from "../components/LogsModal";
-
-// const COLUMNS = ["assigned", "active", "completed", "error", "closed"];
-
-// export function Project() {
-//   const { id } = useParams();
-//   const token = localStorage.getItem("token");
-//   const userId = localStorage.getItem("userId");
-
-//   const [project, setProject] = useState(null);
-//   const [toast, setToast] = useState({ message: "", type: "info" });
-
-//   // drag state
-//   const ghostRef = useRef(null);
-//   const dragItemRef = useRef(null);
-//   const offsetRef = useRef({ x: 0, y: 0 });
-
-//   // modals
-//   const [showComments, setShowComments] = useState(null); // user object
-//   const [showLogs, setShowLogs] = useState(null); // user object
-
-//   async function loadProject() {
-//     const res = await getProject(token, id);
-//     if (res.success) {
-//       setProject(res.data.project);
-//     } else {
-//       setToast({ message: res.message, type: "error" });
-//     }
-//   }
-
-//   useEffect(() => {
-//     loadProject();
-//   }, [id]);
-
-//   if (!project) return <div className="p-6">Loading...</div>;
-
-//   const isOwner = String(project.created_by?._id || project.created_by) === String(userId);
-
-//   // ================= DRAG LOGIC =================
-
-//   function onMouseDown(e, userTask) {
-//     // permission
-//     if (!isOwner || String(userTask.user_id?._id || userTask.user_id) !== String(userId)) {
-//       setToast({ message: "You can move only your task", type: "warning" });
-//       return;
-//     }
-
-//     dragItemRef.current = userTask;
-
-//     const card = e.currentTarget;
-//     const rect = card.getBoundingClientRect();
-
-//     const ghost = card.cloneNode(true);
-//     ghost.classList.add("opacity-50", "pointer-events-none", "fixed", "z-50");
-//     ghost.style.left = rect.left + "px";
-//     ghost.style.top = rect.top + "px";
-//     ghost.style.width = rect.width + "px";
-
-//     document.body.appendChild(ghost);
-//     ghostRef.current = ghost;
-
-//     offsetRef.current = {
-//       x: e.clientX - rect.left,
-//       y: e.clientY - rect.top,
-//     };
-
-//     document.addEventListener("mousemove", onMouseMove);
-//     document.addEventListener("mouseup", onMouseUp);
-//   }
-
-//   function onMouseMove(e) {
-//     if (!ghostRef.current) return;
-//     ghostRef.current.style.left = e.clientX - offsetRef.current.x + "px";
-//     ghostRef.current.style.top = e.clientY - offsetRef.current.y + "px";
-//   }
-
-//   async function onMouseUp(e) {
-//     if (!ghostRef.current || !dragItemRef.current) return;
-
-//     const ghost = ghostRef.current;
-//     const ghostRect = ghost.getBoundingClientRect();
-
-//     let newStatus = null;
-
-//     document.querySelectorAll("[data-column]").forEach((col) => {
-//       const rect = col.getBoundingClientRect();
-//       if (
-//         ghostRect.left > rect.left &&
-//         ghostRect.right < rect.right &&
-//         ghostRect.top > rect.top &&
-//         ghostRect.bottom < rect.bottom
-//       ) {
-//         newStatus = col.dataset.column;
-//       }
-//     });
-
-//     if (newStatus && newStatus !== dragItemRef.current.status) {
-//       await moveTask(dragItemRef.current, newStatus);
-//     }
-
-//     ghost.remove();
-//     ghostRef.current = null;
-//     dragItemRef.current = null;
-
-//     document.removeEventListener("mousemove", onMouseMove);
-//     document.removeEventListener("mouseup", onMouseUp);
-//   }
-
-//   async function moveTask(task, toStatus) {
-//     const fromStatus = task.status;
-
-//     const updateLog = {
-//       from: fromStatus,
-//       to: toStatus,
-//       date: new Date(),
-//     };
-
-//     const updatedUsers = project.users_added.map((u) => {
-//       if (u === task) {
-//         return {
-//           ...u,
-//           status: toStatus,
-//           updates: [...(u.updates || []), updateLog],
-//         };
-//       }
-//       return u;
-//     });
-
-//     const res = await updateProject(token, project._id, { users_added: updatedUsers });
-//     if (res.success) {
-//       setToast({ message: "Task moved", type: "success" });
-//       loadProject();
-//     } else {
-//       setToast({ message: res.message, type: "error" });
-//     }
-//   }
-
-//   // ================= UI =================
-
-//   return (
-//     <div className="p-4">
-//       <h1 className="text-2xl font-bold mb-4">{project.name}</h1>
-
-//       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-//         {COLUMNS.map((col) => (
-//           <div
-//             key={col}
-//             data-column={col}
-//             className="bg-gray-100 rounded-lg p-3 min-h-[400px]"
-//           >
-//             <h2 className="font-semibold capitalize mb-3">{col}</h2>
-
-//             {project.users_added
-//               .filter((u) => u.status === col)
-//               .map((u, i) => (
-//                 <div
-//                   key={i}
-//                   onMouseDown={(e) => onMouseDown(e, u)}
-//                   className="bg-white rounded-lg p-3 mb-3 shadow cursor-grab active:cursor-grabbing"
-//                 >
-//                   <div className="flex items-center gap-2 mb-2">
-//                     <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
-//                       {u.email?.[0]?.toUpperCase()}
-//                     </div>
-//                     <div className="text-sm font-semibold">{u.email}</div>
-//                   </div>
-
-//                   <div className="text-sm mb-2">{u.tasks}</div>
-
-//                   <div className="flex gap-3 text-xs text-blue-600">
-//                     <button onClick={() => setShowComments(u)}>Comments</button>
-//                     <button onClick={() => setShowLogs(u)}>Logs</button>
-//                   </div>
-//                 </div>
-//               ))}
-//           </div>
-//         ))}
-//       </div>
-
-//       {/* Toast */}
-//       <div className="fixed top-4 right-4 w-96 z-50">
-//         <Toast
-//           message={toast.message}
-//           type={toast.type}
-//           onClose={() => setToast({ message: "", type: "info" })}
-//         />
-//       </div>
-
-//       {/* Comments Modal */}
-//       {showComments && (
-//         <CommentsModal
-//           task={showComments}
-//           project={project}
-//           onClose={() => setShowComments(null)}
-//           onSaved={loadProject}
-//         />
-//       )}
-
-//       {/* Logs Modal */}
-//       {showLogs && (
-//         <LogsModal task={showLogs} onClose={() => setShowLogs(null)} />
-//       )}
-//     </div>
-//   );
-// }
-
-
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getProject, updateProject } from "../services/projectService";
+import {
+  getProject,
+  updateTaskStatus,
+  updateTaskDetails,
+  addTaskToUser,
+  addUserToProject
+} from "../services/projectService";
 import Toast from "../components/Toast";
 import { CommentsModal } from "../components/CommentsModal";
 import { LogsModal } from "../components/LogsModal";
+import {
+  ExternalLink,
+  MessageSquare,
+  History,
+  FileText,
+  Lock,
+  Edit2,
+  Check,
+  X as XIcon,
+  Plus,
+  User,
+  Calendar,
+  Link as LinkIcon
+} from "lucide-react";
 
-const COLUMNS = ["assigned", "active", "completed", "error", "closed"];
+const COLUMNS = ["assigned", "active", "completed", "closed", "errors"];
 
 export function Project() {
   const { id } = useParams();
@@ -227,14 +35,15 @@ export function Project() {
   const [project, setProject] = useState(null);
   const [toast, setToast] = useState({ message: "", type: "info" });
 
-  // drag state
+
+  const [showComments, setShowComments] = useState(null);
+  const [showLogs, setShowLogs] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+
+
   const ghostRef = useRef(null);
   const dragItemRef = useRef(null);
   const offsetRef = useRef({ x: 0, y: 0 });
-
-  // modals
-  const [showComments, setShowComments] = useState(null);
-  const [showLogs, setShowLogs] = useState(null);
 
   async function loadProject() {
     const res = await getProject(token, id);
@@ -249,36 +58,192 @@ export function Project() {
     loadProject();
   }, [id]);
 
-  if (!project) return <div className="p-6">Loading...</div>;
+  if (!project) return <div className="p-6 text-gray-500">Loading project board...</div>;
 
-  const isOwner =
-    String(project.created_by?._id || project.created_by) === String(userId);
+  const isOwner = String(project.created_by?._id || project.created_by) === String(userId);
+
+
+  function TaskCard({ task }) {
+    const [isEditing, setIsEditing] = useState(false);
+    const [driveLink, setDriveLink] = useState(task.drive_link || "");
+
+    const taskOwnerId = task.userId ? String(task.userId) : null;
+    const canMove = (isOwner && taskOwnerId) || taskOwnerId === String(userId);
+
+    const canEdit = isOwner || taskOwnerId === String(userId);
+
+    async function handleSaveLink() {
+      if (!canEdit) return;
+
+      const payload = {
+        taskId: task._id,
+        drive_link: driveLink
+      };
+
+      const res = await updateTaskDetails(token, project._id, task.userId, payload);
+      if (res.success) {
+        setToast({ message: "Submission link updated", type: "success" });
+        setIsEditing(false);
+        loadProject();
+      } else {
+        setToast({ message: res.message || "Failed to update", type: "error" });
+      }
+    }
+
+    return (
+      <div
+        onMouseDown={(e) => !isEditing && onMouseDown(e, task)}
+        className={`
+          bg-white rounded-lg p-4 shadow-sm border border-gray-100 
+          transition-all group relative mb-3
+          ${!isEditing && canMove ? "cursor-grab active:cursor-grabbing hover:shadow-md" : ""}
+          ${!isEditing && !canMove ? "cursor-not-allowed opacity-80" : ""}
+        `}
+      >
+
+        {!canMove && !isEditing && (
+          <div className="absolute top-2 right-2 text-gray-300">
+            <Lock size={12} />
+          </div>
+        )}
+
+
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-xs font-bold" title={task.userEmail}>
+            {task.userEmail?.[0]?.toUpperCase()}
+          </div>
+          <span className="text-xs text-gray-500 truncate max-w-[150px]">
+            {task.userEmail}
+          </span>
+        </div>
+
+
+        <div className="mb-3 font-semibold text-gray-800 text-sm flex items-start gap-2">
+          <FileText size={14} className="mt-0.5 text-gray-400 shrink-0" />
+          <span className="break-words">{task.task || "Untitled Task"}</span>
+        </div>
+
+
+        <div className="mb-3 text-xs">
+          {isEditing ? (
+            <div className="flex gap-1 items-center" onMouseDown={(e) => e.stopPropagation()}>
+              <input
+                className="flex-1 border rounded px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-blue-500"
+                value={driveLink}
+                onChange={(e) => setDriveLink(e.target.value)}
+                placeholder="Paste drive link here..."
+                autoFocus
+              />
+              <button onClick={handleSaveLink} className="p-1 bg-green-100 text-green-600 rounded hover:bg-green-200">
+                <Check size={12} />
+              </button>
+              <button onClick={() => setIsEditing(false)} className="p-1 bg-red-100 text-red-600 rounded hover:bg-red-200">
+                <XIcon size={12} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex justify-between items-center group/link">
+              <div className="flex-1 overflow-hidden">
+                {task.drive_link ? (
+                  task.drive_link.startsWith("http") ? (
+                    <a
+                      href={task.drive_link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-blue-600 hover:underline flex items-center gap-1 bg-blue-50 px-2 py-1 rounded w-fit"
+                      onMouseDown={(e) => e.stopPropagation()}
+                    >
+                      <ExternalLink size={10} /> View Submission
+                    </a>
+                  ) : (
+                    <span className="text-gray-600 bg-gray-50 px-2 py-1 rounded block truncate" title={task.drive_link}>
+                      {task.drive_link}
+                    </span>
+                  )
+                ) : (
+                  <span className="italic text-gray-400">No submission yet</span>
+                )}
+              </div>
+
+              {canEdit && (
+                <button
+                  onClick={() => {
+                    setDriveLink(task.drive_link || "");
+                    setIsEditing(true);
+                  }}
+                  className="ml-2 text-gray-400 hover:text-blue-600 opacity-0 group-hover/link:opacity-100 transition-opacity"
+                  title="Edit Link"
+                  onMouseDown={(e) => e.stopPropagation()}
+                >
+                  <Edit2 size={12} />
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+
+        {task.date_to_completed && (
+          <div className="text-[10px] text-gray-400 mb-3 bg-red-50 text-red-500 px-2 py-0.5 rounded w-fit">
+            Due: {new Date(task.date_to_completed).toLocaleDateString()}
+          </div>
+        )}
+
+
+        <div className="flex justify-between items-center border-t pt-2 mt-2">
+          <button
+            onClick={() => setShowComments(task)}
+            className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600 transition-colors"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <MessageSquare size={14} />
+            {(task.comments?.by_creator?.length || 0) + (task.comments?.by_user?.length || 0) + (task.comments?.by_others?.length || 0)}
+          </button>
+
+          <button
+            onClick={() => setShowLogs(task)}
+            className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600 transition-colors"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <History size={14} />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // ================= DRAG LOGIC =================
+  function onMouseDown(e, taskData) {
+    const taskOwnerId = taskData.userId ? String(taskData.userId) : null;
+    const currentUserId = String(userId);
 
-  function onMouseDown(e, userTask) {
-    // permission
-    if (
-      !isOwner ||
-      String(userTask.user_id?._id || userTask.user_id) !== String(userId)
-    ) {
-      setToast({ message: "You can move only your task", type: "warning" });
+    if (!taskOwnerId) {
+      setToast({ message: "User has not joined yet. Cannot move task.", type: "error" });
       return;
     }
 
-    e.preventDefault(); // stop text selection start
-    document.body.style.userSelect = "none"; // disable selection globally
+    if (!isOwner && taskOwnerId !== currentUserId) {
+      setToast({ message: "Access Denied: You can only move your own tasks.", type: "error" });
+      return;
+    }
 
-    dragItemRef.current = userTask;
+    e.preventDefault();
+    document.body.style.userSelect = "none";
+
+    dragItemRef.current = taskData;
 
     const card = e.currentTarget;
     const rect = card.getBoundingClientRect();
 
     const ghost = card.cloneNode(true);
-    ghost.classList.add("opacity-70", "pointer-events-none", "fixed", "z-50");
+    ghost.style.position = "fixed";
+    ghost.style.pointerEvents = "none";
+    ghost.style.opacity = "0.8";
+    ghost.style.zIndex = "9999";
     ghost.style.left = rect.left + "px";
     ghost.style.top = rect.top + "px";
     ghost.style.width = rect.width + "px";
+    ghost.style.transform = "rotate(2deg)";
 
     document.body.appendChild(ghost);
     ghostRef.current = ghost;
@@ -294,7 +259,6 @@ export function Project() {
 
   function onMouseMove(e) {
     if (!ghostRef.current) return;
-
     ghostRef.current.style.left = e.clientX - offsetRef.current.x + "px";
     ghostRef.current.style.top = e.clientY - offsetRef.current.y + "px";
   }
@@ -307,7 +271,6 @@ export function Project() {
     if (!ghostRef.current || !dragItemRef.current) return;
 
     const ghost = ghostRef.current;
-
     let newStatus = null;
 
     document.querySelectorAll("[data-column]").forEach((col) => {
@@ -324,37 +287,17 @@ export function Project() {
     ghost.remove();
     ghostRef.current = null;
     dragItemRef.current = null;
-
-    document.body.style.userSelect = ""; // re-enable selection
-
+    document.body.style.userSelect = "";
     document.removeEventListener("mousemove", onMouseMove);
     document.removeEventListener("mouseup", onMouseUp);
   }
 
-  async function moveTask(task, toStatus) {
-    const fromStatus = task.status;
-
-    const updateLog = {
-      from: fromStatus,
-      to: toStatus,
-      date: new Date(),
+  async function moveTask(taskData, toStatus) {
+    const payload = {
+      taskId: taskData._id,
+      status: toStatus
     };
-
-    const updatedUsers = project.users_added.map((u) => {
-      if (u === task) {
-        return {
-          ...u,
-          status: toStatus,
-          updates: [...(u.updates || []), updateLog],
-        };
-      }
-      return u;
-    });
-
-    const res = await updateProject(token, project._id, {
-      users_added: updatedUsers,
-    });
-
+    const res = await updateTaskStatus(token, project._id, taskData.userId, payload);
     if (res.success) {
       setToast({ message: "Task moved", type: "success" });
       loadProject();
@@ -363,50 +306,226 @@ export function Project() {
     }
   }
 
-  // ================= UI =================
+  const getAllTasks = () => {
+    const allTasks = [];
+    if (!project.users_added) return [];
+
+    project.users_added.forEach(u => {
+      const uId = u.user_id?._id || u.user_id || null;
+      const uEmail = u.email;
+
+      if (u.tasks_listed && u.tasks_listed.length > 0) {
+        u.tasks_listed.forEach(t => {
+          allTasks.push({
+            ...t,
+            userId: uId,
+            userEmail: uEmail
+          });
+        });
+      }
+    });
+    return allTasks;
+  };
+
+  const tasks = getAllTasks();
+
+  // ================= ADD MODAL LOGIC =================
+  function AddModal({ onClose }) {
+    const [email, setEmail] = useState("");
+    const [taskDesc, setTaskDesc] = useState("");
+    const [date, setDate] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    async function handleAdd() {
+      if (!email.trim()) return setToast({ message: "Email is required", type: "error" });
+      setLoading(true);
+
+      // 1. Find if user exists in project
+      const existingUser = project.users_added.find(u => u.email.toLowerCase() === email.toLowerCase());
+      console.log(existingUser);
+
+      if (existingUser) {
+        // Case A: User exists
+        if (!existingUser.user_id._id) {
+          // User invited but not joined -> Backend addTaskToUser requires userId, so we can't add task yet
+          setToast({ message: "User invited but hasn't joined. Cannot assign tasks yet.", type: "warning" });
+        } else {
+          // User joined -> Add Task
+          if (!taskDesc) {
+            setToast({ message: "User exists. Please enter a task description.", type: "warning" });
+            setLoading(false);
+            return;
+          }
+          const res = await addTaskToUser(token, project._id, existingUser.user_id._id, {
+            task: taskDesc,
+            drive_link: "",
+            date_to_completed: date
+          });
+          if (res.success) {
+            setToast({ message: "Task added to user!", type: "success" });
+            onClose();
+            loadProject();
+          } else {
+            setToast({ message: res.message, type: "error" });
+          }
+        }
+      } else {
+        // Case B: New User -> Invite them
+        const tasks_listed = {
+          task: taskDesc,
+          drive_link: "",
+          status: "assigned",
+          date_to_completed: date || null,
+          comments: {},
+          updates: [{
+            from: "assigned",
+            to: "assigned",
+            date: new Date(),
+          }],
+        }
+        const userAddingNew = {
+
+          user_id: null,
+          email: email,
+          tasks_listed: tasks_listed,
+          instructions: "",
+        }
+
+        const res = await addUserToProject(token, project._id, userAddingNew);
+        if (res.success) {
+          setToast({ message: "User invited successfully! You can assign tasks once they join.", type: "success" });
+          onClose();
+          loadProject();
+        } else {
+          setToast({ message: res.message, type: "error" });
+        }
+      }
+      setLoading(false);
+    }
+
+    return (
+      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] backdrop-blur-sm">
+        <div className="bg-white w-full max-w-md rounded-xl p-6 shadow-xl">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-bold text-lg">Add People / Task</h3>
+            <button onClick={onClose}><XIcon className="text-gray-500" /></button>
+          </div>
+
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-bold text-gray-500 uppercase">User Email</label>
+              <div className="flex items-center border rounded px-3 py-2 mt-1">
+                <User size={16} className="text-gray-400 mr-2" />
+                <input
+                  className="flex-1 outline-none text-sm"
+                  placeholder="name@example.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-gray-500 uppercase">Task Description</label>
+              <div className="flex items-center border rounded px-3 py-2 mt-1">
+                <FileText size={16} className="text-gray-400 mr-2" />
+                <input
+                  className="flex-1 outline-none text-sm"
+                  placeholder="e.g. Frontend Design"
+                  value={taskDesc}
+                  onChange={e => setTaskDesc(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-gray-500 uppercase">Due Date (Optional)</label>
+              <div className="flex items-center border rounded px-3 py-2 mt-1">
+                <Calendar size={16} className="text-gray-400 mr-2" />
+                <input
+                  type="date"
+                  className="flex-1 outline-none text-sm"
+                  value={date}
+                  onChange={e => setDate(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={handleAdd}
+            disabled={loading}
+            className="w-full mt-6 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:bg-blue-300"
+          >
+            {loading ? "Processing..." : "Add to Project"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">{project.name}</h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        {COLUMNS.map((col) => (
-          <div
-            key={col}
-            data-column={col}
-            className="bg-gray-100 rounded-lg p-3 min-h-[400px]"
-          >
-            <h2 className="font-semibold capitalize mb-3">{col}</h2>
-
-            {project.users_added
-              .filter((u) => u.status === col)
-              .map((u, i) => (
-                <div
-                  key={i}
-                  onMouseDown={(e) => onMouseDown(e, u)}
-                  className="bg-white rounded-lg p-3 mb-3 shadow cursor-grab active:cursor-grabbing select-none"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
-                      {u.email?.[0]?.toUpperCase()}
-                    </div>
-                    <div className="text-sm font-semibold">{u.email}</div>
-                  </div>
-
-                  <div className="text-sm mb-2">{u.tasks}</div>
-
-                  <div className="flex gap-3 text-xs text-blue-600">
-                    <button onClick={() => setShowComments(u)}>Comments</button>
-                    <button onClick={() => setShowLogs(u)}>Logs</button>
-                  </div>
-                </div>
-              ))}
+    <div className="p-6 h-screen flex flex-col bg-gray-50">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800">{project.name}</h1>
+          <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
+            <span>{tasks.length} tasks</span>
+            <span>•</span>
+            <span>{project.users_added.length} members</span>
+            {isOwner && <span className="text-blue-600 bg-blue-50 px-2 rounded font-medium">Owner View</span>}
           </div>
-        ))}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="text-sm text-gray-600 bg-white px-4 py-2 rounded-lg shadow-sm border">
+            ID: <span className="font-mono select-all">{project._id}</span>
+          </div>
+          {isOwner && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 shadow-sm transition-colors"
+            >
+              <Plus size={18} /> Add People / Task
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Board Container */}
+      <div className="flex-1 overflow-x-auto overflow-y-hidden">
+        <div className="flex gap-4 h-full min-w-[1000px]">
+          {COLUMNS.map((col) => (
+            <div
+              key={col}
+              data-column={col}
+              className="flex-1 bg-gray-100/80 rounded-xl p-3 flex flex-col min-w-[280px] border border-gray-200"
+            >
+              {/* Column Header */}
+              <h2 className="font-bold uppercase text-xs text-gray-500 mb-4 flex justify-between px-1">
+                {col}
+                <span className="bg-gray-200 text-gray-600 px-2 rounded-full">
+                  {tasks.filter(t => t.status === col).length}
+                </span>
+              </h2>
+
+              {/* Cards Container */}
+              <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-1">
+                {tasks
+                  .filter((t) => t.status === col)
+                  .map((t) => (
+                    <TaskCard key={t._id} task={t} />
+                  ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Toast */}
-      <div className="fixed top-4 right-4 w-96 z-50">
+      <div className="fixed top-4 right-4 z-[9999]">
         <Toast
           message={toast.message}
           type={toast.type}
@@ -414,11 +533,15 @@ export function Project() {
         />
       </div>
 
+      {/* Add Modal */}
+      {showAddModal && <AddModal onClose={() => setShowAddModal(false)} />}
+
       {/* Comments Modal */}
       {showComments && (
         <CommentsModal
           task={showComments}
-          project={project}
+          userId={showComments.userId}
+          projectId={project._id}
           onClose={() => setShowComments(null)}
           onSaved={loadProject}
         />
@@ -426,9 +549,11 @@ export function Project() {
 
       {/* Logs Modal */}
       {showLogs && (
-        <LogsModal task={showLogs} onClose={() => setShowLogs(null)} />
+        <LogsModal
+          task={showLogs}
+          onClose={() => setShowLogs(null)}
+        />
       )}
     </div>
   );
 }
-

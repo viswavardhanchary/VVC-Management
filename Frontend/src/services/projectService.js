@@ -48,7 +48,7 @@ export async function getProject(token, projectId) {
   }
 }
 
-/** Update project */
+/** Update project details (Name, instructions, etc.) */
 export async function updateProject(token, projectId, updates) {
   try {
     const res = await api.put(`/projects/${projectId}`, updates, _makeAuthHeader(token));
@@ -99,56 +99,66 @@ export async function removeUserFromProject(token, projectId, userId) {
   }
 }
 
-/** Update user task */
-export async function updateUserTask(token, projectId, userId, payload) {
+/** * Add a NEW Task to a user 
+ * (Replaces updateUserTask)
+ */
+export async function addTaskToUser(token, projectId, userId, payload) {
   try {
-    const res = await api.put(
-      `/projects/${projectId}/users/${userId}/task`,
-      payload,
-      _makeAuthHeader(token)
-    );
-    return { success: true, data: res.data, message: 'Task updated' };
-  } catch (err) {
-    const message = err?.response?.data?.message || 'Failed to update task';
-    return { success: false, message };
-  }
-}
-
-/** Update drive link */
-export async function updateDriveLink(token, projectId, userId, payload) {
-  try {
-    const res = await api.put(
-      `/projects/${projectId}/users/${userId}/drive`,
-      payload,
-      _makeAuthHeader(token)
-    );
-    return { success: true, data: res.data, message: 'Drive link updated' };
-  } catch (err) {
-    const message = err?.response?.data?.message || 'Failed to update drive link';
-    return { success: false, message };
-  }
-}
-
-/** Update user status (also pushes update history) */
-export async function updateUserStatus(token, projectId, userId, payload) {
-  try {
-    const res = await api.put(
-      `/projects/${projectId}/users/${userId}/status`,
-      payload,
-      _makeAuthHeader(token)
-    );
-    return { success: true, data: res.data, message: 'Status updated' };
-  } catch (err) {
-    const message = err?.response?.data?.message || 'Failed to update status';
-    return { success: false, message };
-  }
-}
-
-/** Add comment */
-export async function addComment(token, projectId, userId, payload) {
-  try {
+    // Payload should contain: { task, drive_link, date_to_completed }
     const res = await api.post(
-      `/projects/${projectId}/users/${userId}/comments`,
+      `/projects/${projectId}/users/${userId}/tasks`, 
+      payload,
+      _makeAuthHeader(token)
+    );
+    return { success: true, data: res.data, message: 'Task added successfully' };
+  } catch (err) {
+    const message = err?.response?.data?.message || 'Failed to add task';
+    return { success: false, message };
+  }
+}
+
+/** * Update task details (Task Name, Drive link, Date) 
+ * (Replaces updateDriveLink)
+ */
+export async function updateTaskDetails(token, projectId, userId, payload) {
+  try {
+    // Payload MUST contain: { taskId, task?, drive_link?, date_to_completed? }
+    const res = await api.put(
+      `/projects/${projectId}/users/${userId}/tasks/details`,
+      payload,
+      _makeAuthHeader(token)
+    );
+    return { success: true, data: res.data, message: 'Task details updated' };
+  } catch (err) {
+    const message = err?.response?.data?.message || 'Failed to update task details';
+    return { success: false, message };
+  }
+}
+
+/** * Update task status 
+ */
+export async function updateTaskStatus(token, projectId, userId, payload) {
+  try {
+    // Payload MUST contain: { taskId, status }
+    const res = await api.put(
+      `/projects/${projectId}/users/${userId}/tasks/status`,
+      payload,
+      _makeAuthHeader(token)
+    );
+    return { success: true, data: res.data, message: 'Task status updated' };
+  } catch (err) {
+    const message = err?.response?.data?.message || 'Failed to update task status';
+    return { success: false, message };
+  }
+}
+
+/** * Add comment to a specific task 
+ */
+export async function addTaskComment(token, projectId, userId, payload) {
+  try {
+    // Payload MUST contain: { taskId, text, type, name }
+    const res = await api.post(
+      `/projects/${projectId}/users/${userId}/tasks/comments`,
       payload,
       _makeAuthHeader(token)
     );

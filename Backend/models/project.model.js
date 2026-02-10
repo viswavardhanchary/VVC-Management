@@ -61,16 +61,24 @@ const CommentsSchema = new Schema(
   { _id: false }
 );
 
-const UserAddedSchema = new Schema(
+const taskListedSchema = new Schema(
   {
-    user_id: { type: Schema.Types.ObjectId, ref: 'User' },
-    email: { type: String },
-    tasks: { type: String },
+    task: {type: String},
     drive_link: { type: String },
     status: { type: String, enum: StatusEnum, default: 'assigned' },
     date_to_completed: { type: Date },
     comments: { type: CommentsSchema, default: {} },
     updates: { type: [UpdateSchema], default: [] },
+  },
+  { _id: true }
+)
+
+const UserAddedSchema = new Schema(
+  {
+    user_id: { type: Schema.Types.ObjectId, ref: 'User' },
+    email: { type: String },
+    tasks_listed: {type: [taskListedSchema] , default: []},
+    instructions: String,
   },
   { _id: false }
 );
@@ -82,6 +90,7 @@ const ProjectSchema = new Schema(
     link: { type: String },
     created_by: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     users_added: { type: [UserAddedSchema], default: [] },
+    instructions: String
   },
   { timestamps: true }
 );

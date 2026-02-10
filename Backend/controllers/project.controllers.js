@@ -3,7 +3,7 @@ const Project = require('../models/project.model');
 /** Create project */
 async function createProject(req, res) {
   try {
-    const { name, password, link, users_added } = req.body;
+    const { name, password, link, users_added, instructions } = req.body;
     const created_by = req.userId;
 
     if (!name) return res.status(400).json({ message: 'Project name is required' });
@@ -13,7 +13,9 @@ async function createProject(req, res) {
       password,
       link,
       created_by,
-      users_added: users_added || [],
+      instructions,
+      // Ensure users_added follows the new structure if passed during creation
+      users_added: users_added || [], 
     });
 
     res.status(201).json({ success: true, project });
@@ -70,7 +72,7 @@ async function getProject(req, res) {
   }
 }
 
-/** Update project */
+/** Update project (General details like name, password) */
 async function updateProject(req, res) {
   try {
     const project = await Project.findByIdAndUpdate(
@@ -101,10 +103,10 @@ async function deleteProject(req, res) {
   }
 }
 
-/** Add user to project */
+/** * Add user to project */
 async function addUserToProject(req, res) {
   try {
-    const { user_id, email, tasks } = req.body;
+    const { user_id, email, instructions , tasks_listed} = req.body;
 
     const project = await Project.findByIdAndUpdate(
       req.params.id,
@@ -113,15 +115,13 @@ async function addUserToProject(req, res) {
           users_added: {
             user_id,
             email,
-            tasks,
-            status: 'assigned',
-            updates: [],
-            comments: {},
+            instructions: instructions || "",
+            tasks_listed: tasks_listed || [] // Initialize empty array for tasks
           },
         },
       },
       { new: true }
-    );
+    ).populate('users_added.user_id', 'name email');
 
     if (!project) return res.status(404).json({ message: 'Project not found' });
 
@@ -152,66 +152,106 @@ async function removeUserFromProject(req, res) {
   }
 }
 
-/** Update user task */
-async function updateUserTask(req, res) {
+/** * Add a NEW Task to a User 
+ * UPDATED: Now accepts 'task' (description) + 'drive_link' + 'date'
+ */
+async function addTaskToUser(req, res) {
   try {
-    const { tasks } = req.body;
+    const { task, drive_link, date_to_completed } = req.body;
 
-    const project = await Project.findOneAndUpdate(
-      { _id: req.params.id, 'users_added.user_id': req.params.userId },
-      { $set: { 'users_added.$.tasks': tasks } },
-      { new: true }
-    );
-
-    res.json({ success: true, project });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-}
-
-/** Update drive link */
-async function updateDriveLink(req, res) {
-  try {
-    const { drive_link } = req.body;
-
-    const project = await Project.findOneAndUpdate(
-      { _id: req.params.id, 'users_added.user_id': req.params.userId },
-      { $set: { 'users_added.$.drive_link': drive_link } },
-      { new: true }
-    );
-
-    res.json({ success: true, project });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-}
-
-/** Update status + push update history */
-async function updateUserStatus(req, res) {
-  try {
-    const { status } = req.body;
-
-    const project = await Project.findOne({ _id: req.params.id });
+    // We can't use simple findOneAndUpdate easily because users_added has _id: false
+    // We fetch, modify, and save.
+    const project = await Project.findById(req.params.id);
     if (!project) return res.status(404).json({ message: 'Project not found' });
 
-    const user = project.users_added.find(
+    // Find the specific user within the project
+    const userEntry = project.users_added.find(
       u => u.user_id.toString() === req.params.userId
     );
-    if (!user) return res.status(404).json({ message: 'User not found in project' });
 
-    const oldStatus = user.status;
-    user.status = status;
+    if (!userEntry) return res.status(404).json({ message: 'User not found in project' });
 
-    user.updates.push({
+    // Push new task to tasks_listed
+    userEntry.tasks_listed.push({
+      task: task || "New Task", // The admin instruction
+      drive_link: drive_link || "", // The user submission (initially empty usually)
+      date_to_completed,
+      status: 'assigned',
+      updates: [],
+      comments: {}
+    });
+
+    await project.save();
+    res.json({ success: true, project });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
+/** * Update task details 
+ * UPDATED: Now allows updating the 'task' name as well as 'drive_link' and 'date'
+ * REQUIRES: taskId in body
+ */
+async function updateTaskDetails(req, res) {
+  try {
+    const { taskId, task, drive_link, date_to_completed } = req.body;
+
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    const userEntry = project.users_added.find(
+      u => u.user_id.toString() === req.params.userId
+    );
+    if (!userEntry) return res.status(404).json({ message: 'User not found' });
+
+    // Find the specific task inside the user's list
+    const foundTask = userEntry.tasks_listed.id(taskId);
+    if (!foundTask) return res.status(404).json({ message: 'Task not found' });
+
+    // Update fields if they are present in body
+    if (task !== undefined) foundTask.task = task;
+    if (drive_link !== undefined) foundTask.drive_link = drive_link;
+    if (date_to_completed !== undefined) foundTask.date_to_completed = date_to_completed;
+
+    await project.save();
+    res.json({ success: true, project });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
+/** * Update status + push update history 
+ * REQUIRES: taskId in body
+ */
+async function updateTaskStatus(req, res) {
+  try {
+    const { taskId, status } = req.body;
+
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    const userEntry = project.users_added.find(
+      u => u.user_id.toString() === req.params.userId
+    );
+    if (!userEntry) return res.status(404).json({ message: 'User not found in project' });
+
+    // Find the specific task
+    const task = userEntry.tasks_listed.id(taskId);
+    if (!task) return res.status(404).json({ message: 'Task not found' });
+
+    const oldStatus = task.status;
+    task.status = status;
+
+    // Push to the updates array inside the specific task
+    task.updates.push({
       from: oldStatus,
       to: status,
       date: new Date(),
     });
 
     await project.save();
-
     res.json({ success: true, project });
   } catch (err) {
     console.error(err);
@@ -219,21 +259,40 @@ async function updateUserStatus(req, res) {
   }
 }
 
-/** Add comment */
-async function addComment(req, res) {
+/** * Add comment to a specific task
+ * REQUIRES: taskId in body
+ */
+async function addTaskComment(req, res) {
   try {
-    const { text, type } = req.body; // type: by_creator | by_others | by_user
+    const { taskId, text, type, name } = req.body; // type: by_creator | by_others | by_user
 
-    const project = await Project.findOneAndUpdate(
-      { _id: req.params.id, 'users_added.user_id': req.params.userId },
-      {
-        $push: {
-          [`users_added.$.comments.${type}`]: text,
-        },
-      },
-      { new: true }
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    const userEntry = project.users_added.find(
+      u => u.user_id.toString() === req.params.userId
     );
+    if (!userEntry) return res.status(404).json({ message: 'User not found' });
 
+    const task = userEntry.tasks_listed.id(taskId);
+    if (!task) return res.status(404).json({ message: 'Task not found' });
+
+    // Construct comment object
+    const commentData = {
+      text,
+      name: name || 'User', // You might want to fetch the real name based on req.userId
+      last_edited: new Date()
+    };
+
+    // Push to the correct array in the comments object
+    if (task.comments[type]) {
+      task.comments[type].push(commentData);
+    } else {
+      // Fallback if the array doesn't exist (though Schema default should handle this)
+      task.comments[type] = [commentData];
+    }
+
+    await project.save();
     res.json({ success: true, project });
   } catch (err) {
     console.error(err);
@@ -250,8 +309,8 @@ module.exports = {
   deleteProject,
   addUserToProject,
   removeUserFromProject,
-  updateUserTask,
-  updateDriveLink,
-  updateUserStatus,
-  addComment,
+  addTaskToUser,
+  updateTaskDetails,
+  updateTaskStatus,
+  addTaskComment,
 };
