@@ -63,6 +63,11 @@ router.put('/:id/users/:userId/tasks/details', authMiddleware, controllers.updat
  */
 router.put('/:id/users/:userId/tasks/status', authMiddleware, controllers.updateTaskStatus);
 
+/** * Delete a specific task
+ * Note: Requires `taskId` in req.body
+ */
+router.delete('/:id/users/:userId/tasks', authMiddleware, controllers.deleteTask);
+
 /** * Add comment to a specific task
  * Note: Requires `taskId` in req.body
  */

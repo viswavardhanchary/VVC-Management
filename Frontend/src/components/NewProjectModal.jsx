@@ -152,23 +152,25 @@ export default function NewProjectModal({ onClose, editData }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] backdrop-blur-sm">
-      <div className="bg-white w-full max-w-3xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-100 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-slideUp border border-cyan-100/50" style={{
+        boxShadow: '0 10px 15px -3px rgba(6, 182, 212, 0.1), 0 4px 6px -2px rgba(6, 182, 212, 0.05)'
+      }}>
         
         {/* Header */}
-        <div className="p-4 border-b flex justify-between items-center bg-gray-50">
-          <h2 className="text-xl font-bold text-gray-800">
+        <div className="p-4 border-b border-cyan-200 bg-linear-to-r from-white to-cyan-50 flex justify-between items-center">
+          <h2 className="text-xl font-bold text-teal-900">
             {editData ? "Edit Project" : "Create New Project"}
           </h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-red-500">
+          <button onClick={onClose} className="text-cyan-600 hover:text-red-500 transition-all duration-200 hover:scale-110 hover:bg-red-50 p-1 rounded-full">
             <X size={24} />
           </button>
         </div>
 
         {/* Scrollable Body */}
-        <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+        <div className="p-6 overflow-y-auto flex-1 custom-scrollbar bg-white">
           {/* Toast Notification */}
-          <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-[110] w-full max-w-md">
+          <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-110 w-full max-w-md">
              <Toast
                message={toast.message}
                type={toast.type}
@@ -179,9 +181,9 @@ export default function NewProjectModal({ onClose, editData }) {
           {/* Project Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Project Name</label>
+              <label className="block text-sm font-bold text-blackmb-2">Project Name</label>
               <input
-                className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full border-2 border-cyan-200 p-3 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none bg-white text-blackplaceholder-cyan-400 transition-all duration-200"
                 placeholder="e.g. Website Redesign"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -189,10 +191,10 @@ export default function NewProjectModal({ onClose, editData }) {
             </div>
             
             <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password (Optional)</label>
+              <label className="block text-sm font-bold text-blackmb-2">Password (Optional)</label>
               <div className="relative">
                 <input
-                  className="w-full border border-gray-300 p-2 rounded pr-10 focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full border-2 border-cyan-200 p-3 rounded-lg pr-10 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none bg-white text-blackplaceholder-cyan-400 transition-all duration-200"
                   type={showPass ? "text" : "password"}
                   placeholder="Secret123"
                   value={password}
@@ -201,7 +203,7 @@ export default function NewProjectModal({ onClose, editData }) {
                 <button
                   type="button"
                   onClick={() => setShowPass(!showPass)}
-                  className="absolute right-2 top-2.5 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-3.5 text-cyan-600 hover:text-cyan-700 transition-colors"
                 >
                   {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -211,10 +213,10 @@ export default function NewProjectModal({ onClose, editData }) {
 
           {/* Users & Tasks Section */}
           <div className="mb-4 flex justify-between items-center">
-             <h3 className="font-bold text-lg text-gray-800">Assign Users & Tasks</h3>
+             <h3 className="font-bold text-lg text-teal-900">Assign Users & Tasks</h3>
              <button
                 onClick={addUserBlock}
-                className="text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full font-medium flex items-center gap-1 hover:bg-blue-100 transition-colors"
+                className="text-sm bg-gradient-to-r from-cyan-400 to-cyan-500 text-white px-4 py-2 rounded-full font-bold flex items-center gap-1 hover:from-cyan-500 hover:to-cyan-600 transition-all duration-200 shadow-lg hover:shadow-xl border border-cyan-600 hover:scale-105"
               >
                 <Plus size={16} /> Add User
               </button>
@@ -222,15 +224,15 @@ export default function NewProjectModal({ onClose, editData }) {
 
           <div className="space-y-6">
             {users.map((u, userIndex) => (
-              <div key={userIndex} className="border border-gray-200 rounded-lg p-4 bg-gray-50/50 shadow-sm">
+              <div key={userIndex} className="border-2 border-cyan-200 rounded-xl p-4 bg-cyan-50/40 shadow-md hover:shadow-lg transition-all duration-200 hover:border-cyan-400 hover:bg-cyan-50/60 animate-slideInUp" style={{ animationDelay: `${userIndex * 0.1}s` }}>
                 
                 {/* User Header (Email + Remove) */}
                 <div className="flex gap-3 mb-4 items-start">
                   <div className="flex-1">
                     <div className="relative">
-                        <User className="absolute left-3 top-2.5 text-gray-400" size={16} />
+                        <User className="absolute left-3 top-3 text-cyan-600" size={16} />
                         <input
-                            className="w-full border border-gray-300 pl-9 p-2 rounded focus:ring-1 focus:ring-blue-500 outline-none"
+                            className="w-full border-2 border-cyan-200 pl-9 p-3 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none text-blackplaceholder-cyan-400 transition-all duration-200 bg-white"
                             placeholder="User Email"
                             value={u.email}
                             onChange={(e) => updateUserEmail(userIndex, e.target.value)}
@@ -239,7 +241,7 @@ export default function NewProjectModal({ onClose, editData }) {
                   </div>
                   <button
                     onClick={() => removeUserBlock(userIndex)}
-                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                    className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 hover:scale-110"
                     title="Remove User"
                   >
                     <Trash size={18} />
@@ -247,17 +249,17 @@ export default function NewProjectModal({ onClose, editData }) {
                 </div>
 
                 {/* Tasks List for this User */}
-                <div className="pl-4 border-l-2 border-gray-200 ml-2 space-y-3">
+                <div className="pl-4 border-l-3 border-cyan-400 ml-2 space-y-3">
                     {u.tasks.map((task, taskIndex) => (
-                        <div key={taskIndex} className="flex gap-2 items-center">
+                        <div key={taskIndex} className="flex gap-2 items-center animate-slideInUp" style={{ animationDelay: `${(userIndex + taskIndex) * 0.05}s` }}>
                             <div className="flex-1 grid grid-cols-3 gap-2">
                                 {/* Task Name Input */}
                                 <div className="col-span-2 relative">
-                                    <FileText className="absolute left-3 top-2.5 text-gray-400" size={14} />
+                                    <FileText className="absolute left-3 top-3 text-cyan-600" size={14} />
                                     <input
-                                        className="w-full border border-gray-300 pl-8 p-2 text-sm rounded focus:ring-1 focus:ring-blue-500 outline-none"
+                                        className="w-full border-2 border-cyan-200 pl-8 p-2.5 text-sm rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none text-blackplaceholder-cyan-400 transition-all duration-200 bg-white"
                                         placeholder="Task Description (e.g. Design Home Page)"
-                                        value={task.taskName} // Maps to 'task' in DB
+                                        value={task.taskName}
                                         onChange={(e) => updateTaskField(userIndex, taskIndex, 'taskName', e.target.value)}
                                     />
                                 </div>
@@ -265,7 +267,7 @@ export default function NewProjectModal({ onClose, editData }) {
                                 <div className="relative">
                                     <input
                                         type="date"
-                                        className="w-full border border-gray-300 p-2 text-sm rounded focus:ring-1 focus:ring-blue-500 outline-none"
+                                        className="w-full border-2 border-cyan-200 p-2.5 text-sm rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none text-blacktransition-all duration-200 bg-white"
                                         value={task.date}
                                         onChange={(e) => updateTaskField(userIndex, taskIndex, 'date', e.target.value)}
                                     />
@@ -276,7 +278,7 @@ export default function NewProjectModal({ onClose, editData }) {
                             {u.tasks.length > 1 && (
                                 <button
                                     onClick={() => removeTaskFromUser(userIndex, taskIndex)}
-                                    className="text-gray-400 hover:text-red-500"
+                                    className="text-red-400 hover:text-red-600 transition-all duration-200 hover:scale-110 hover:bg-red-50 p-1 rounded"
                                 >
                                     <X size={16} />
                                 </button>
@@ -287,7 +289,7 @@ export default function NewProjectModal({ onClose, editData }) {
                     {/* Add Task Button */}
                     <button
                         onClick={() => addTaskToUser(userIndex)}
-                        className="text-xs flex items-center gap-1 text-emerald-600 font-medium hover:underline mt-2"
+                        className="text-xs flex items-center gap-1 text-emerald-700 font-bold hover:text-emerald-800 transition-all duration-200 hover:scale-105 mt-2 bg-emerald-100 hover:bg-emerald-200 px-3 py-2 rounded-lg"
                     >
                         <Plus size={14} /> Add another task
                     </button>
@@ -300,13 +302,13 @@ export default function NewProjectModal({ onClose, editData }) {
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t bg-gray-50 flex justify-end gap-3">
-          <button onClick={onClose} className="px-5 py-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-100 transition-colors">
+        <div className="p-4 border-t border-cyan-200 bg-cyan-50 flex justify-end gap-3">
+          <button onClick={onClose} className="px-6 py-2 border-2 border-cyan-400 rounded-lg bg-white hover:bg-cyan-50 transition-all duration-200 text-teal-700 font-bold hover:shadow-md hover:scale-105">
             Cancel
           </button>
           <button
             onClick={handleSubmit}
-            className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-md transition-colors"
+            className="px-6 py-2 bg-gradient-to-br from-cyan-500 to-cyan-600 text-white rounded-lg hover:from-cyan-600 hover:to-cyan-700 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 font-bold"
           >
             {editData ? "Update Project" : "Create Project"}
           </button>

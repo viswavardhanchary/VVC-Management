@@ -259,6 +259,37 @@ async function updateTaskStatus(req, res) {
   }
 }
 
+/** * Delete a specific task from a user's task list
+ * REQUIRES: taskId in body
+ */
+async function deleteTask(req, res) {
+  try {
+    const { taskId } = req.body;
+
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    const userEntry = project.users_added.find(
+      u => u.user_id.toString() === req.params.userId
+    );
+    if (!userEntry) return res.status(404).json({ message: 'User not found' });
+
+    // Find and remove the task
+    const taskIndex = userEntry.tasks_listed.findIndex(
+      t => t._id.toString() === taskId
+    );
+    if (taskIndex === -1) return res.status(404).json({ message: 'Task not found' });
+
+    userEntry.tasks_listed.splice(taskIndex, 1);
+
+    await project.save();
+    res.json({ success: true, message: 'Task deleted', project });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
 /** * Add comment to a specific task
  * REQUIRES: taskId in body
  */
@@ -312,5 +343,6 @@ module.exports = {
   addTaskToUser,
   updateTaskDetails,
   updateTaskStatus,
+  deleteTask,
   addTaskComment,
 };

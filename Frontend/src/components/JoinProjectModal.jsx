@@ -182,17 +182,19 @@ export default function JoinProjectModal({ onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm">
-      <div className="bg-white w-full max-w-md rounded-xl p-6 relative shadow-lg">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-white w-full max-w-md rounded-2xl p-6 relative shadow-2xl animate-slideUp border border-cyan-200" style={{
+        boxShadow: '0 10px 15px -3px rgba(6, 182, 212, 0.1), 0 4px 6px -2px rgba(6, 182, 212, 0.05)'
+      }}>
         <button 
           onClick={onClose} 
-          className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          className="absolute top-3 right-3 text-cyan-600 hover:text-red-500 transition-all duration-200 hover:scale-110 hover:bg-red-50 p-1 rounded-full"
           disabled={loading}
         >
           <X size={20} />
         </button>
 
-        <h2 className="text-xl font-bold mb-4 text-gray-800">Join Existing Project</h2>
+        <h2 className="text-xl font-bold mb-4 text-teal-900">Join Existing Project</h2>
         
         {/* Toast Container */}
         <div className="absolute top-2 left-0 w-full flex justify-center pointer-events-none">
@@ -207,9 +209,9 @@ export default function JoinProjectModal({ onClose }) {
 
         <div className="space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Project Name</label>
+            <label className="block text-sm font-bold text-teal-900 mb-2">Project Name</label>
             <input
-              className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full border-2 border-cyan-200 p-3 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none bg-white text-black placeholder-cyan-400 transition-all duration-200"
               placeholder="Enter exact project name"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -218,9 +220,9 @@ export default function JoinProjectModal({ onClose }) {
           </div>
 
           <div>
-             <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+             <label className="block text-sm font-bold text-teal-900 mb-2">Password</label>
              <input
-              className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full border-2 border-cyan-200 p-3 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none bg-white text-black placeholder-cyan-400 transition-all duration-200"
               placeholder="Enter project password"
               type="password"
               value={password}
@@ -230,15 +232,15 @@ export default function JoinProjectModal({ onClose }) {
           </div>
 
           <div>
-             <label className="block text-sm font-medium text-gray-700 mb-1">Your Email</label>
+             <label className="block text-sm font-bold text-teal-900 mb-2">Your Email</label>
              <input
-              className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full border-2 border-cyan-200 p-3 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none bg-white text-black placeholder-cyan-400 transition-all duration-200"
               placeholder="email@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-teal-600 mt-2 font-medium">
               You must use the email address the project creator assigned to you.
             </p>
           </div>
@@ -247,7 +249,7 @@ export default function JoinProjectModal({ onClose }) {
         <div className="flex justify-end gap-3 mt-6">
           <button 
             onClick={onClose} 
-            className="px-4 py-2 border rounded-lg hover:bg-gray-50 text-gray-700"
+            className="px-5 py-2 border-2 border-cyan-400 rounded-lg bg-white hover:bg-cyan-50 text-teal-700 font-bold transition-all duration-200 hover:shadow-md hover:scale-105"
             disabled={loading}
           >
             Cancel
@@ -255,7 +257,7 @@ export default function JoinProjectModal({ onClose }) {
           <button
             onClick={handleJoin}
             disabled={loading}
-            className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-2"
+            className="px-6 py-2 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-lg hover:from-emerald-600 hover:to-emerald-700 disabled:from-emerald-300 disabled:to-emerald-400 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed font-bold"
           >
             {loading ? <Loader2 className="animate-spin" size={18} /> : "Join Project"}
           </button>

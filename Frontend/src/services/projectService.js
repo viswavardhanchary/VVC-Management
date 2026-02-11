@@ -168,3 +168,22 @@ export async function addTaskComment(token, projectId, userId, payload) {
     return { success: false, message };
   }
 }
+
+/** * Delete a specific task
+ */
+export async function deleteTask(token, projectId, userId, payload) {
+  try {
+    // Payload MUST contain: { taskId }
+    const res = await api.delete(
+      `/projects/${projectId}/users/${userId}/tasks`,
+      {
+        data: payload,
+        ..._makeAuthHeader(token)
+      }
+    );
+    return { success: true, data: res.data, message: 'Task deleted' };
+  } catch (err) {
+    const message = err?.response?.data?.message || 'Failed to delete task';
+    return { success: false, message };
+  }
+}

@@ -5,7 +5,8 @@ import {
   updateTaskStatus,
   updateTaskDetails,
   addTaskToUser,
-  addUserToProject
+  addUserToProject,
+  deleteTask as deleteTaskAPI
 } from "../services/projectService";
 import Toast from "../components/Toast";
 import { CommentsModal } from "../components/CommentsModal";
@@ -22,7 +23,8 @@ import {
   Plus,
   User,
   Calendar,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Trash2
 } from "lucide-react";
 
 const COLUMNS = ["assigned", "active", "completed", "closed", "errors"];
@@ -39,6 +41,13 @@ export function Project() {
   const [showComments, setShowComments] = useState(null);
   const [showLogs, setShowLogs] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  
+  // Edit task modal
+  const [editingTask, setEditingTask] = useState(null);
+  const [editingTaskEmail, setEditingTaskEmail] = useState("");
+  
+  // Delete task confirmation
+  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, task: null, userEmail: "" });
 
 
   const ghostRef = useRef(null);
@@ -64,6 +73,7 @@ export function Project() {
 
 
   function TaskCard({ task }) {
+    console.log(task);
     const [isEditing, setIsEditing] = useState(false);
     const [driveLink, setDriveLink] = useState(task.drive_link || "");
 
@@ -94,10 +104,12 @@ export function Project() {
       <div
         onMouseDown={(e) => !isEditing && onMouseDown(e, task)}
         className={`
-          bg-white rounded-lg p-4 shadow-sm border border-gray-100 
+          rounded-lg p-4 shadow-sm border border-gray-100 
           transition-all group relative mb-3
           ${!isEditing && canMove ? "cursor-grab active:cursor-grabbing hover:shadow-md" : ""}
           ${!isEditing && !canMove ? "cursor-not-allowed opacity-80" : ""}
+          ${task.userId === localStorage.getItem('userId') && new Date(task.date_to_completed) >= new Date() && task.status !== 'completed' ? "bg-orange-100" :
+            task.userId === localStorage.getItem('userId') && new Date(task.date_to_completed) < new Date() && task.status !== 'completed' ? "bg-red-200" : task.userId === localStorage.getItem('userId') && task.status === 'completed' ? "bg-green-200" : "bg-white"}
         `}
       >
 
@@ -109,10 +121,10 @@ export function Project() {
 
 
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-xs font-bold" title={task.userEmail}>
+          <div className="w-6 h-6 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-xs font-bold" title={task.userEmail}>
             {task.userEmail?.[0]?.toUpperCase()}
           </div>
-          <span className="text-xs text-gray-500 truncate max-w-[150px]">
+          <span className="text-xs text-gray-500 truncate max-w-37.5">
             {task.userEmail}
           </span>
         </div>
@@ -120,7 +132,7 @@ export function Project() {
 
         <div className="mb-3 font-semibold text-gray-800 text-sm flex items-start gap-2">
           <FileText size={14} className="mt-0.5 text-gray-400 shrink-0" />
-          <span className="break-words">{task.task || "Untitled Task"}</span>
+          <span className="wrap-break-words">{task.task || "Untitled Task"}</span>
         </div>
 
 
@@ -184,35 +196,57 @@ export function Project() {
 
 
         {task.date_to_completed && (
-          <div className="text-[10px] text-gray-400 mb-3 bg-red-50 text-red-500 px-2 py-0.5 rounded w-fit">
+          <div className="text-[10px] mb-3 bg-red-50 text-red-500 px-2 py-0.5 rounded w-fit">
             Due: {new Date(task.date_to_completed).toLocaleDateString()}
           </div>
         )}
 
 
         <div className="flex justify-between items-center border-t pt-2 mt-2">
-          <button
-            onClick={() => setShowComments(task)}
-            className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600 transition-colors"
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            <MessageSquare size={14} />
-            {(task.comments?.by_creator?.length || 0) + (task.comments?.by_user?.length || 0) + (task.comments?.by_others?.length || 0)}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowComments(task)}
+              className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600 transition-colors"
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <MessageSquare size={14} />
+              {(task.comments?.by_creator?.length || 0) + (task.comments?.by_user?.length || 0) + (task.comments?.by_others?.length || 0)}
+            </button>
 
-          <button
-            onClick={() => setShowLogs(task)}
-            className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600 transition-colors"
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            <History size={14} />
-          </button>
+            <button
+              onClick={() => setShowLogs(task)}
+              className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600 transition-colors"
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <History size={14} />
+            </button>
+          </div>
+
+          {isOwner && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleEditTask(task)}
+                className="flex items-center gap-1 text-xs text-gray-500 hover:text-cyan-600 transition-colors p-1 hover:bg-cyan-50 rounded"
+                title="Edit Task"
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                <Edit2 size={14} />
+              </button>
+              <button
+                onClick={() => handleDeleteTask(task)}
+                className="flex items-center gap-1 text-xs text-gray-500 hover:text-red-600 transition-colors p-1 hover:bg-red-50 rounded"
+                title="Delete Task"
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
-  // ================= DRAG LOGIC =================
   function onMouseDown(e, taskData) {
     const taskOwnerId = taskData.userId ? String(taskData.userId) : null;
     const currentUserId = String(userId);
@@ -306,6 +340,64 @@ export function Project() {
     }
   }
 
+  const handleEditTask = (task) => {
+    setEditingTask(task);
+    setEditingTaskEmail(task.userEmail || "");
+  };
+
+  const handleSaveTaskEdit = async (taskDesc, deadline) => {
+    if (!editingTask) return;
+
+    if(!editingTask.userId) {
+      setToast({ message: "User has not Joined! Cannot Make Changes!", type: "error" });
+    }else {
+
+    const payload = {
+      taskId: editingTask._id,
+      task: taskDesc,
+      date_to_completed: deadline
+    };
+
+    const res = await updateTaskDetails(token, project._id, editingTask.userId, payload);
+    if (res.success) {
+      setToast({ message: "Task updated successfully!", type: "success" });
+      setEditingTask(null);
+      loadProject();
+    } else {
+      setToast({ message: res.message, type: "error" });
+    }
+  }
+  };
+
+  const handleDeleteTask = (task) => {
+    setDeleteConfirm({
+      open: true,
+      task: task,
+      userEmail: task.userEmail || ""
+    });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirm.task) return;
+
+    const payload = {
+      taskId: deleteConfirm.task._id
+    };
+    if(!editingTask.userId) {
+      setToast({ message: "User has not Joined! Cannot Make Changes!", type: "error" });
+    }else {
+
+    const res = await deleteTaskAPI(token, project._id, deleteConfirm.task.userId, payload);
+    if (res.success) {
+      setToast({ message: "Task deleted successfully!", type: "success" });
+      setDeleteConfirm({ open: false, task: null, userEmail: "" });
+      loadProject();
+    } else {
+      setToast({ message: res.message || "Failed to delete task", type: "error" });
+    }
+  }
+  };
+
   const getAllTasks = () => {
     const allTasks = [];
     if (!project.users_added) return [];
@@ -329,7 +421,7 @@ export function Project() {
 
   const tasks = getAllTasks();
 
-  // ================= ADD MODAL LOGIC =================
+
   function AddModal({ onClose }) {
     const [email, setEmail] = useState("");
     const [taskDesc, setTaskDesc] = useState("");
@@ -404,7 +496,7 @@ export function Project() {
     }
 
     return (
-      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] backdrop-blur-sm">
+      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-100 backdrop-blur-sm">
         <div className="bg-white w-full max-w-md rounded-xl p-6 shadow-xl">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-bold text-lg">Add People / Task</h3>
@@ -464,6 +556,126 @@ export function Project() {
     );
   }
 
+  function EditTaskModal({ task, userEmail, onClose }) {
+    const [taskDesc, setTaskDesc] = useState(task.task || "");
+    const [deadline, setDeadline] = useState(task.date_to_completed ? task.date_to_completed.split('T')[0] : "");
+    const [loading, setLoading] = useState(false);
+
+    async function handleSave() {
+      if (!taskDesc.trim()) {
+        setToast({ message: "Task description is required", type: "error" });
+        return;
+      }
+
+      setLoading(true);
+      await handleSaveTaskEdit(taskDesc, deadline);
+      setLoading(false);
+    }
+
+    return (
+      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-100 backdrop-blur-sm">
+        <div className="bg-white w-full max-w-md rounded-xl p-6 shadow-xl border border-cyan-200">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-bold text-lg text-teal-900">Edit Task</h3>
+            <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+              <XIcon size={20} />
+            </button>
+          </div>
+
+          <div className="bg-gray-50 p-3 rounded mb-4 text-sm">
+            <p className="text-gray-600">
+              <strong className="text-teal-900">User:</strong> {userEmail}
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-bold text-teal-900 uppercase">Task Description</label>
+              <div className="flex items-center border border-cyan-200 rounded px-3 py-2 mt-1">
+                <FileText size={16} className="text-cyan-600 mr-2" />
+                <input
+                  className="flex-1 outline-none text-sm"
+                  placeholder="e.g. Frontend Design"
+                  value={taskDesc}
+                  onChange={(e) => setTaskDesc(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-teal-900 uppercase">Due Date (Optional)</label>
+              <div className="flex items-center border border-cyan-200 rounded px-3 py-2 mt-1">
+                <Calendar size={16} className="text-cyan-600 mr-2" />
+                <input
+                  type="date"
+                  className="flex-1 outline-none text-sm"
+                  value={deadline}
+                  onChange={(e) => setDeadline(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3 mt-6">
+            <button
+              onClick={onClose}
+              className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={loading}
+              className="flex-1 bg-gradient-to-r from-cyan-500 to-emerald-500 text-white py-2 rounded-lg hover:from-cyan-600 hover:to-emerald-600 transition disabled:opacity-50"
+            >
+              {loading ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function DeleteConfirmationModal({ task, userEmail, onConfirm, onCancel, loading }) {
+    return (
+      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-100 backdrop-blur-sm">
+        <div className="bg-white w-full max-w-sm rounded-xl p-6 shadow-xl border border-red-200">
+          <div className="mb-4">
+            <h3 className="font-bold text-lg text-red-600">Delete Task</h3>
+            <p className="text-sm text-gray-600 mt-1">
+              Are you sure you want to delete this task? This action cannot be undone.
+            </p>
+          </div>
+
+          <div className="bg-gray-50 p-3 rounded mb-4 text-sm space-y-2">
+            <p className="text-gray-600">
+              <strong className="text-teal-900">User:</strong> {userEmail}
+            </p>
+            <p className="text-gray-600">
+              <strong className="text-teal-900">Task:</strong> {task.task}
+            </p>
+          </div>
+
+          <div className="flex gap-3 mt-6">
+            <button
+              onClick={onCancel}
+              disabled={loading}
+              className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              disabled={loading}
+              className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition disabled:opacity-50 font-medium"
+            >
+              {loading ? "Deleting..." : "Delete"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
 
   return (
@@ -471,15 +683,34 @@ export function Project() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">{project.name}</h1>
-          <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
-            <span>{tasks.length} tasks</span>
-            <span>•</span>
-            <span>{project.users_added.length} members</span>
-            {isOwner && <span className="text-blue-600 bg-blue-50 px-2 rounded font-medium">Owner View</span>}
+          <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-gray-500">
+            <div className="flex items-center gap-2">
+              <span>{tasks.length} tasks</span>
+              <div className="flex items-center gap-2">
+                <span>•</span>
+                <span>{project.users_added.length} members</span>
+              </div>
+            </div>
+
+
+            <div className="flex flex-wrap items-center gap-2 ">
+              {isOwner && <span className="text-blue-600 bg-blue-50 px-2 rounded font-medium">Owner View</span>}
+              <span className="text-orange-500 bg-blue-50 px-2 rounded font-medium">
+                <span>Your Task Color</span>
+              </span>
+              <span className="text-red-500 bg-blue-50 px-2 rounded font-medium">
+                <span>Due Tasks Color</span>
+              </span>
+              <span className="text-green-500 bg-blue-50 px-2 rounded font-medium">
+                <span>Completed Tasks Color</span>
+              </span>
+            </div>
+
+
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap +items-center gap-3">
           <div className="text-sm text-gray-600 bg-white px-4 py-2 rounded-lg shadow-sm border">
             ID: <span className="font-mono select-all">{project._id}</span>
           </div>
@@ -496,12 +727,12 @@ export function Project() {
 
       {/* Board Container */}
       <div className="flex-1 overflow-x-auto overflow-y-hidden">
-        <div className="flex gap-4 h-full min-w-[1000px]">
+        <div className="flex gap-4 h-full min-w-250">
           {COLUMNS.map((col) => (
             <div
               key={col}
               data-column={col}
-              className="flex-1 bg-gray-100/80 rounded-xl p-3 flex flex-col min-w-[280px] border border-gray-200"
+              className="flex-1 bg-gray-100/80 rounded-xl p-3 flex flex-col min-w-70 border border-gray-200"
             >
               {/* Column Header */}
               <h2 className="font-bold uppercase text-xs text-gray-500 mb-4 flex justify-between px-1">
@@ -525,7 +756,7 @@ export function Project() {
       </div>
 
       {/* Toast */}
-      <div className="fixed top-4 right-4 z-[9999]">
+      <div className="fixed top-4 right-4 z-9999">
         <Toast
           message={toast.message}
           type={toast.type}
@@ -552,6 +783,26 @@ export function Project() {
         <LogsModal
           task={showLogs}
           onClose={() => setShowLogs(null)}
+        />
+      )}
+
+      {/* Edit Task Modal */}
+      {editingTask && (
+        <EditTaskModal
+          task={editingTask}
+          userEmail={editingTaskEmail}
+          onClose={() => setEditingTask(null)}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm.open && deleteConfirm.task && (
+        <DeleteConfirmationModal
+          task={deleteConfirm.task}
+          userEmail={deleteConfirm.userEmail}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeleteConfirm({ open: false, task: null, userEmail: "" })}
+          loading={false}
         />
       )}
     </div>
