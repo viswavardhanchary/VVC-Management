@@ -150,7 +150,7 @@ export function CommentsModal({ task, projectId, onClose, onSaved }) {
             <button
               onClick={handleSubmit}
               disabled={loading || !text.trim()}
-              className="bg-gradient-to-br from-cyan-500 to-cyan-600 text-white p-3 rounded-xl hover:from-cyan-600 hover:to-cyan-700 disabled:from-cyan-300 disabled:to-cyan-400 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed font-medium"
+              className="bg-linear-to-br from-cyan-500 to-cyan-600 text-white p-3 rounded-xl hover:from-cyan-600 hover:to-cyan-700 disabled:from-cyan-300 disabled:to-cyan-400 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed font-medium"
             >
               <Send size={18} />
             </button>

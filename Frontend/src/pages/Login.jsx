@@ -85,6 +85,7 @@ export const Login = () => {
         localStorage.setItem('userName', user.name);
         setVisuals((v) => ({ ...v, loading: false, toast: { message: 'Login successful!', type: 'success' } }));
         const redirectTo = new URLSearchParams(location.search).get('redirect') || '/home';
+        console.log(redirectTo);
         navigate(redirectTo, { replace: true });
       } else {
         setVisuals((v) => ({ ...v, loading: false, toast: { message: res.message || 'Invalid credentials', type: 'error' } }));

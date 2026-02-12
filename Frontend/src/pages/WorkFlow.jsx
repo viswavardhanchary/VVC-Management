@@ -29,10 +29,10 @@ export function WorkFlow() {
   const [editProject, setEditProject] = useState(null);
   const [shareLink, setShareLink] = useState("");
 
-  // confirm modal state
+
   const [confirmBox, setConfirmBox] = useState({
     open: false,
-    type: "", // "delete" | "leave"
+    type: "", 
     project: null,
   });
 
@@ -75,7 +75,7 @@ export function WorkFlow() {
   }
 
   async function confirmLeave(project) {
-    // Use the dedicated service method for removing a user
+
     const res = await removeUserFromProject(token, project._id, userId);
     
     if (res.success) {
@@ -146,7 +146,7 @@ export function WorkFlow() {
 
         <div
           className={`transition-all duration-300 overflow-hidden origin-top ${
-            isOpen ? "max-h-[1000px] opacity-100 animate-slideDown" : "max-h-0 opacity-0"
+            isOpen ? "max-h-250 opacity-100 animate-slideDown" : "max-h-0 opacity-0"
           }`}
         >
           {isOpen && (
@@ -167,7 +167,7 @@ export function WorkFlow() {
                     {project.users_added?.map((u, i) => (
                         <li key={i} className="bg-white p-3 rounded-lg border border-cyan-200 hover:border-cyan-300 transition-all">
                         <div className="font-medium text-teal-900 flex items-center gap-2">
-                             <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-400 to-cyan-600 text-white flex items-center justify-center text-xs font-bold">
+                             <div className="w-6 h-6 rounded-full bg-linear-to-br from-cyan-400 to-cyan-600 text-white flex items-center justify-center text-xs font-bold">
                                 {u.email[0].toUpperCase()}
                              </div>
                              {u.email}
@@ -178,7 +178,7 @@ export function WorkFlow() {
                             <ul className="mt-2 pl-8 space-y-2">
                             {u.tasks_listed.map((task, tIndex) => (
                                 <li key={tIndex} className="text-xs flex items-center gap-2 text-teal-700 animate-slideInUp" style={{ animationDelay: `${tIndex * 0.05}s` }}>
-                                    <FileText size={12} className="text-cyan-600 flex-shrink-0" />
+                                    <FileText size={12} className="text-cyan-600 shrink-0" />
                                     {/* Updated to show Task Name */}
                                     <span className="font-medium text-black">
                                         {task.task || `Task ${tIndex + 1}`}
@@ -220,33 +220,32 @@ export function WorkFlow() {
 
   return (
     <div className="p-8 max-w-5xl mx-auto min-h-screen bg-white">
-      {/* Header */}
       <div className="relative inline-block mb-10 animate-slideUp">
         <h1 className="text-4xl font-bold text-teal-900">Workflow Projects</h1>
-        <div className="absolute left-0 -bottom-2 h-1.5 w-32 bg-gradient-to-r from-cyan-500 to-cyan-400 animate-pulse rounded-full"></div>
+        <div className="absolute left-0 -bottom-2 h-1.5 w-32 bg-linear-to-r from-cyan-500 to-cyan-400 animate-pulse rounded-full"></div>
       </div>
 
   
       <div className="flex gap-4 mb-10 flex-wrap">
         <button
           onClick={() => setShowNew(true)}
-          className="flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-br from-cyan-500 to-cyan-600 text-white hover:from-cyan-600 hover:to-cyan-700 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 font-bold"
+          className="flex items-center gap-2 px-6 py-3 rounded-lg bg-linear-to-br from-cyan-500 to-cyan-600 text-white hover:from-cyan-600 hover:to-cyan-700 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 font-bold"
         >
           <Plus size={18} /> New Project
         </button>
 
         <button
           onClick={() => setShowJoin(true)}
-          className="flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 font-bold"
+          className="flex items-center gap-2 px-6 py-3 rounded-lg bg-linear-to-br from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 font-bold"
         >
           <LogIn size={18} /> Join Project
         </button>
       </div>
 
-      {/* Created Projects */}
+
       <h2 className="text-2xl font-bold mb-5 text-teal-900 flex items-center gap-3">
         Created Projects 
-        <span className="text-sm font-bold text-white bg-gradient-to-r from-cyan-500 to-cyan-600 px-3 py-1 rounded-full shadow-md">{createdProjects.length}</span>
+        <span className="text-sm font-bold text-white bg-linear-to-r from-cyan-500 to-cyan-600 px-3 py-1 rounded-full shadow-md">{createdProjects.length}</span>
       </h2>
       {createdProjects.length === 0 && (
         <div className="text-teal-600 mb-8 italic bg-cyan-50 p-6 rounded-lg border-2 border-dashed border-cyan-300 text-center font-medium">
@@ -260,7 +259,7 @@ export function WorkFlow() {
       {/* Joined Projects */}
       <h2 className="text-2xl font-bold mt-12 mb-5 text-teal-900 flex items-center gap-3">
         Joined Projects 
-        <span className="text-sm font-bold text-white bg-gradient-to-r from-emerald-500 to-emerald-600 px-3 py-1 rounded-full shadow-md">{joinedProjects.length}</span>
+        <span className="text-sm font-bold text-white bg-linear-to-r from-emerald-500 to-emerald-600 px-3 py-1 rounded-full shadow-md">{joinedProjects.length}</span>
       </h2>
       {joinedProjects.length === 0 && (
         <div className="text-teal-600 italic bg-cyan-50 p-6 rounded-lg border-2 border-dashed border-cyan-300 text-center font-medium">
@@ -272,7 +271,7 @@ export function WorkFlow() {
       ))}
 
       {/* Toast */}
-      <div className="fixed top-4 right-4 z-[9999]">
+      <div className="fixed top-4 right-4 z-9999">
         <Toast
           message={toast.message}
           type={toast.type}
@@ -325,7 +324,7 @@ export function WorkFlow() {
                 Close
               </button>
               <button
-                className="px-5 py-2 bg-gradient-to-br from-cyan-500 to-cyan-600 text-white rounded-lg hover:from-cyan-600 hover:to-cyan-700 transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center gap-2 font-bold"
+                className="px-5 py-2 bg-linear-to-br from-cyan-500 to-cyan-600 text-white rounded-lg hover:from-cyan-600 hover:to-cyan-700 transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center gap-2 font-bold"
                 onClick={() => {
                   navigator.clipboard.writeText(shareLink);
                   setToast({ message: "Link copied!", type: "success" });

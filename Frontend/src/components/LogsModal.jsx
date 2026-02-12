@@ -1,33 +1,3 @@
-// export function LogsModal({ task, onClose }) {
-//   return (
-//     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-//       <div className="bg-white p-6 rounded-lg w-full max-w-md">
-//         <h3 className="font-semibold mb-4">Movement Logs</h3>
-
-//         <div className="space-y-2 max-h-64 overflow-auto text-sm">
-//           {(task.updates || []).map((u, i) => (
-//             <div key={i} className="border p-2 rounded">
-//               <div>
-//                 <b>{u.from}</b> → <b>{u.to}</b>
-//               </div>
-//               <div className="text-xs text-gray-500">
-//                 {new Date(u.date).toLocaleString()}
-//               </div>
-//             </div>
-//           ))}
-//         </div>
-
-//         <div className="flex justify-end mt-4">
-//           <button className="px-4 py-2 border rounded" onClick={onClose}>
-//             Close
-//           </button>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-import React from "react";
 import { X, ArrowRight, History, Clock } from "lucide-react";
 
 export function LogsModal({ task, onClose }) {
@@ -35,7 +5,7 @@ export function LogsModal({ task, onClose }) {
   const updates = [...(task.updates || [])].sort((a, b) => new Date(b.date) - new Date(a.date));
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] backdrop-blur-sm animate-fadeIn">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-100 backdrop-blur-sm animate-fadeIn">
       <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-slideUp border border-cyan-200" style={{
         boxShadow: '0 10px 15px -3px rgba(6, 182, 212, 0.1), 0 4px 6px -2px rgba(6, 182, 212, 0.05)'
       }}>
@@ -46,7 +16,7 @@ export function LogsModal({ task, onClose }) {
             <History className="text-cyan-600" size={20} />
             <div>
                 <h3 className="font-bold text-teal-900">Task History</h3>
-                <p className="text-xs text-teal-600 max-w-[250px] truncate">
+                <p className="text-xs text-teal-600 max-w-62.5 truncate">
                    {task.drive_link || "Untitled Task"}
                 </p>
             </div>
@@ -72,11 +42,11 @@ export function LogsModal({ task, onClose }) {
                 <div key={i} className="flex gap-3 relative animate-slideInUp" style={{ animationDelay: `${i * 0.05}s` }}>
                   {/* Timeline Line */}
                   {i !== updates.length - 1 && (
-                    <div className="absolute left-[19px] top-8 bottom-[-16px] w-[2px] bg-gradient-to-b from-cyan-400 to-cyan-200"></div>
+                    <div className="absolute left-4.75 top-8 -bottom-4 w-0.5 bg-linear-to-b from-cyan-400 to-cyan-200"></div>
                   )}
 
                   {/* Icon Container */}
-                  <div className="relative z-10 w-10 h-10 rounded-full bg-cyan-100 border-2 border-cyan-400 flex items-center justify-center flex-shrink-0 shadow-md">
+                  <div className="relative z-10 w-10 h-10 rounded-full bg-cyan-100 border-2 border-cyan-400 flex items-center justify-center shrink-0 shadow-md">
                      <ArrowRight size={16} className="text-cyan-600" />
                   </div>
 
@@ -87,7 +57,7 @@ export function LogsModal({ task, onClose }) {
                         {u.from}
                       </span>
                       <ArrowRight size={12} className="text-cyan-400" />
-                      <span className="font-bold px-3 py-1 rounded-lg bg-gradient-to-r from-cyan-400 to-cyan-500 text-white uppercase text-xs tracking-wider shadow-md">
+                      <span className="font-bold px-3 py-1 rounded-lg bg-linear-to-r from-cyan-400 to-cyan-500 text-white uppercase text-xs tracking-wider shadow-md">
                         {u.to}
                       </span>
                     </div>

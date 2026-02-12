@@ -9,8 +9,11 @@ const projectRouter = require('./routers/project.router');
 
 require('dotenv').config();
 connectionDB();
+// app.use(cors({
+//   origin: ['http://localhost:5173']
+// }));
 app.use(cors({
-  origin: ['http://localhost:5173']
+  origin: ['https://taskflow-vvc.onrender.com']
 }));
 
 app.use(express.json());

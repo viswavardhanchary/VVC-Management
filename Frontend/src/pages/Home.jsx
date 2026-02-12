@@ -29,11 +29,12 @@ export const Home = () => {
           >
             <Plus className="w-4 h-4" /> Create Workflow
           </Link>
-          <button
+          <Link
+          to="/home/workflow"
             className="flex items-center gap-2 px-4 py-2 border-2 border-cyan-600 text-cyan-600 rounded-lg bg-white transition font-medium w-max cursor-pointer"
           >
             Join Project
-          </button>
+          </Link>
         </div>
       </div>
 

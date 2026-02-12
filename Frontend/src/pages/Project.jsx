@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, createSearchParams } from "react-router-dom";
 import {
   getProject,
   updateTaskStatus,
@@ -26,6 +26,7 @@ import {
   Link as LinkIcon,
   Trash2
 } from "lucide-react";
+import { WEBSITE_BASE_URL } from "../utils/constants";
 
 const COLUMNS = ["assigned", "active", "completed", "closed", "errors"];
 
@@ -33,6 +34,8 @@ export function Project() {
   const { id } = useParams();
   const token = localStorage.getItem("token");
   const userId = localStorage.getItem("userId");
+  const navigate = useNavigate();
+   const location = useLocation();
 
   const [project, setProject] = useState(null);
   const [toast, setToast] = useState({ message: "", type: "info" });
@@ -55,6 +58,10 @@ export function Project() {
   const offsetRef = useRef({ x: 0, y: 0 });
 
   async function loadProject() {
+    if(!userId) {
+      setToast({message: 'Login to Use. Redirecting...' , type: 'info'});
+      navigate('/login')
+    }
     const res = await getProject(token, id);
     if (res.success) {
       setProject(res.data.project);
@@ -626,7 +633,7 @@ export function Project() {
             <button
               onClick={handleSave}
               disabled={loading}
-              className="flex-1 bg-gradient-to-r from-cyan-500 to-emerald-500 text-white py-2 rounded-lg hover:from-cyan-600 hover:to-emerald-600 transition disabled:opacity-50"
+              className="flex-1 bg-linear-to-r from-cyan-500 to-emerald-500 text-white py-2 rounded-lg hover:from-cyan-600 hover:to-emerald-600 transition disabled:opacity-50"
             >
               {loading ? "Saving..." : "Save Changes"}
             </button>

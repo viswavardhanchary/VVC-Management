@@ -65,7 +65,7 @@ export const Header = () => {
         <Link to="/" className="flex items-center gap-2">
           
           <span className="text-xl font-semibold text-cyan-900">
-            VVC Management
+            TaskFlow
           </span>
         </Link>
 

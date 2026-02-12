@@ -257,7 +257,7 @@ export default function JoinProjectModal({ onClose }) {
           <button
             onClick={handleJoin}
             disabled={loading}
-            className="px-6 py-2 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-lg hover:from-emerald-600 hover:to-emerald-700 disabled:from-emerald-300 disabled:to-emerald-400 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed font-bold"
+            className="px-6 py-2 bg-linear-to-br from-emerald-500 to-emerald-600 text-white rounded-lg hover:from-emerald-600 hover:to-emerald-700 disabled:from-emerald-300 disabled:to-emerald-400 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed font-bold"
           >
             {loading ? <Loader2 className="animate-spin" size={18} /> : "Join Project"}
           </button>

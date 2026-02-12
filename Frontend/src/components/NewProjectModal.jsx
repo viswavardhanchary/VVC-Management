@@ -140,7 +140,7 @@ export default function NewProjectModal({ onClose, editData }) {
       if (!res.success) return onToast(res.message, "error");
       
       const projectId = res.data.project._id;
-      const link = `${WEBSITE_BASE_URL}project/${projectId}`;
+      const link = `${WEBSITE_BASE_URL}/project/${projectId}`;
       await updateProject(token, projectId, { link });
 
       onToast("Project created successfully!", "success");
@@ -216,7 +216,7 @@ export default function NewProjectModal({ onClose, editData }) {
              <h3 className="font-bold text-lg text-teal-900">Assign Users & Tasks</h3>
              <button
                 onClick={addUserBlock}
-                className="text-sm bg-gradient-to-r from-cyan-400 to-cyan-500 text-white px-4 py-2 rounded-full font-bold flex items-center gap-1 hover:from-cyan-500 hover:to-cyan-600 transition-all duration-200 shadow-lg hover:shadow-xl border border-cyan-600 hover:scale-105"
+                className="text-sm bg-linear-to-r from-cyan-400 to-cyan-500 text-white px-4 py-2 rounded-full font-bold flex items-center gap-1 hover:from-cyan-500 hover:to-cyan-600 transition-all duration-200 shadow-lg hover:shadow-xl border border-cyan-600 hover:scale-105"
               >
                 <Plus size={16} /> Add User
               </button>
@@ -308,7 +308,7 @@ export default function NewProjectModal({ onClose, editData }) {
           </button>
           <button
             onClick={handleSubmit}
-            className="px-6 py-2 bg-gradient-to-br from-cyan-500 to-cyan-600 text-white rounded-lg hover:from-cyan-600 hover:to-cyan-700 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 font-bold"
+            className="px-6 py-2 bg-linear-to-br from-cyan-500 to-cyan-600 text-white rounded-lg hover:from-cyan-600 hover:to-cyan-700 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 font-bold"
           >
             {editData ? "Update Project" : "Create Project"}
           </button>
